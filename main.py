@@ -25,6 +25,12 @@ def get_token():
 
     data = {"grant_type": "client_credentials"}
     result = post(url, headers=headers, data=data)
+
+    # Check if the token request was successful
+    if result.status_code != 200:
+        print("Failed to retrieve token:", result.content)
+        return None
+    
     json_result = json.loads(result.content)
     token  = json_result["access_token"]
 
@@ -40,6 +46,12 @@ def search_for_artist(token, artist_name):
 
     query_url:str = url + "?" + query
     result = get(query_url, headers=headers)
+
+    # Check if the search request was successful
+    if result.status_code != 200:
+        print("Error searching for artist:", result.content)
+        return None
+    
     json_result = json.loads(result.content)["artists"]["items"]
     if len(json_result) == 0:
         print("No artist with this name exists...")
@@ -51,18 +63,27 @@ def get_songs_by_artist(token, artist_id):
     url:str = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?country=US"
     headers = get_auth_headers(token)
     result = get(url, headers=headers)
+
+    # Check if the song retrieval request was successful
+    if result.status_code != 200:
+        print("Error retrieving songs:", result.content)
+        return []
+    
     json_result = json.loads(result.content)["tracks"]
     return json_result
 
-
-
-token = get_token()
-# print(f"Token: {token}")
-result = search_for_artist(token, "ACDC")
-# print(f"Result: {result["name"]}")
-artist_id = result["id"]
-songs = get_songs_by_artist(token, artist_id)
-# print(f"Songs: {songs}")
-
-for idx, song in enumerate(songs):
-    print(f"{idx + 1}. {song['name']}")
+if __name__ == "__main__":
+    token = get_token()
+    if not token:
+        print("Token retrieval failed.")
+    else:
+        result = search_for_artist(token, "ACDC")
+        if result:
+            artist_id = result["id"]
+            songs = get_songs_by_artist(token, artist_id)
+            if songs:
+                # Display the top 10 songs for the artist
+                for idx, song in enumerate(songs):
+                    print(f"{idx + 1}. {song['name']}")
+            else:
+                print("No songs found for the artist.")
