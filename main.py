@@ -103,7 +103,6 @@ def search_for_artist(token, artist_name):
     result = get(query_url, headers=headers)
 
     if result.status_code != 200:
-        print("Error searching for artist:", result.content)
         return None
     
     json_result = json.loads(result.content)["artists"]["items"]
@@ -119,7 +118,6 @@ def get_artist_albums(token, artist_id):
     result = get(url, headers=headers)
 
     if result.status_code != 200:
-        print("Error retrieving artist's albums:", result.content)
         return []
     
     json_result = json.loads(result.content)
@@ -169,7 +167,6 @@ def get_followed_artists(token):
     result = get(url, headers=headers)
 
     if result.status_code != 200:
-        print("Error retrieving followed artists:", result.content)
         return []
     
     json_result = json.loads(result.content)

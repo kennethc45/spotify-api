@@ -1,0 +1,49 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+    pull_request:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: | 
+          python -m pip install --upgrade pip
+          pip install -r ../requirements.txt
+
+      - name: Build Docker container
+        run: |
+          docker build -t spotify-api -f docker/Dockerfile .
+
+      - name: Run Docker container
+        run: |
+          docker run --name spotify-api-container -d -p 8888:8888 --env-file ../.env spotify-api
+
+      - name: Run tests
+        run: docker exec spotify-api-container python -m unittest discover -s .. -p "test_*.py"
+
+      - name: Stop and remove Docker container
+        if: always()
+        run: |
+          docker stop spotify-api-container 
+          docker rm spotify-api-container 
+
+      - name: Prune Docker system
+        if: always()
+        run: |
+          docker system prune -f
