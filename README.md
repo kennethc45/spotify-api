@@ -1,24 +1,30 @@
 # spotify-api
 API to display the latest songs of artists that users' follow
 
+# Prerequisites
+- Install Docker
+- Python 3.12.3
+
 # Steps
-1. Run 'python3 -m venv tutorial-env' to build environment
+1. Clone repository and navigate to it:
+    - git clone https://github.com/"GIT_USERNAME"/spotify-api.git
 
-2. Run 'source tutorial-env/bin/activate' to activate environment
+    - cd spotify-api
 
-3. Install these packages:
-    - pip3 install python-dotenv
-    - pip3 install requests
-    - pip3 install fastapi uvicorn
-    - pip3 install pytest httpx pytest-asyncio
+2. Run this command to build and run the docker container: 
+    - docker build -t spotify-api -f docker/Dockerfile . && docker run --name spotify-api-container -p 8888:8888 spotify-api
 
-4. Run 'uvicorn main:app --reload' to start the api
-    - If the log in page won't show up due to cookies or denied access, then run the command below
-        - uvicorn main:app --host 0.0.0.0 --port 8888 --reload
+3. Login w/ your spotify account and grant authorization to the API
 
-    - Run 'upytest test_main.py' to start tests
+# Testing
+ - Run 'upytest test_main.py' to start tests
 
 # Endpoints 
-- http://127.0.0.1:8000/login (For uvicorn main:app --reload)
-- http://localhost:8888/login (For uvicorn main:app --host 0.0.0.0 --port 8888 --reload)
+###  Login 
+- **URL**: `http://localhost:8888/login`
+- **Method**: `GET`
+- **Description**: The login endpoint prompts the user for their Spotify login. If successful, it will then prompt the user to grant authorization access to the application through the OAuth protocol.
+- **Response**: 
+  - **Success**: Redirects to `http://localhost:8888/callback`
+  - **Error**: Returns an error message if authentication fails.
 
