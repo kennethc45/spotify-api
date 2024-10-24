@@ -53,7 +53,8 @@ async def callback(request: Request):
                 artist_id = artist["id"]
                 
                 songs = get_recent_songs_by_artist(token, artist_id)
-                recent_songs[artist_name] = songs
+                if len(songs) > 0:
+                    recent_songs[artist_name] = songs
         else:
             print("Cannot find followed artists!")
 
@@ -131,7 +132,6 @@ def get_recent_songs_by_artist(token, artist_id):
 
     for album in albums:
         released_date = datetime.strptime(album['release_date'], "%Y-%m-%d")
-        print("Released Date: ", released_date)
 
         if released_date > two_weeks_ago:
             url = f"https://api.spotify.com/v1/albums/{album['id']}/tracks"
