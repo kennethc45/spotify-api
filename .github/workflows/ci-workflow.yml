@@ -40,8 +40,8 @@ jobs:
       - name: Stop and remove Docker container
         if: always()
         run: |
-          docker stop spotify-api-container 
-          docker rm spotify-api-container 
+          docker stop spotify-api-container || true
+          docker rm spotify-api-container || true
 
       - name: Prune Docker system
         if: always()
