@@ -13,10 +13,11 @@ API to display the latest songs of artists that users' follow
     - pip3 install pytest httpx pytest-asyncio
 
 4. Run 'uvicorn main:app --reload' to start the api
-    - Run 'upytest test_main.py' to start tests
+    If the log in page won't show up due to cookies or denied access, then run the command below
     - uvicorn main:app --host 0.0.0.0 --port 8888
+    - Run 'upytest test_main.py' to start tests
 
 # Endpoints 
-- http://127.0.0.1:8000/login (Does not work?)
-- http://localhost:8888/login
+- http://127.0.0.1:8000/login (For uvicorn main:app --reload)
+- http://localhost:8888/login (For uvicorn main:app --host 0.0.0.0 --port 8888)
 
