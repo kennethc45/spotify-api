@@ -8,6 +8,9 @@ from fastapi.responses import RedirectResponse
 
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
+import time 
+import asyncio 
+import httpx
 
 # SETUP
 load_dotenv()
@@ -27,34 +30,35 @@ app.add_middleware(
 
 @app.get("/login")
 async def login():
-    print("Login endpoint called")
     scope:str = "user-follow-read user-library-read"
     auth_url:str = f"https://accounts.spotify.com/authorize?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope={scope}"
-    print("Redirecting to: ", auth_url)
     return RedirectResponse(url=auth_url)
 
 @app.get("/callback")
 async def callback(request: Request):
-    print("Callback")
     code = request.query_params.get('code')
 
     if not code:
         return {"Error": "No code returned in callback."}
     
-    token = get_token(code)
+    token = await get_token(code)
 
     if token:
-        print("Getting artists")
-        followed_artists = get_followed_artists(token)
+        followed_artists = await get_followed_artists(token)
         recent_songs = {}
         if followed_artists:
+            start_time = time.time()
+            tasks = []
             for artist in followed_artists:
                 artist_name = artist["name"]
                 artist_id = artist["id"]
                 
-                songs = get_recent_songs_by_artist(token, artist_id)
-                if len(songs) > 0:
-                    recent_songs[artist_name] = songs
+                tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
+
+            await asyncio.gather(*tasks)
+
+            total_duration = time.time() - start_time
+            print(f"Time to retrieve recent releases: {total_duration * 1000:.2f} ms")
         else:
             print("Cannot find followed artists!")
 
@@ -63,7 +67,7 @@ async def callback(request: Request):
         print("Error: Token retrieval failed.")
         return RedirectResponse(url="/login")
 
-def get_token(code):
+async def get_token(code):
     auth_string:str = client_id + ":" + client_secret
     auth_bytes = auth_string.encode("utf-8")
     auth_base64:str = str(base64.b64encode(auth_bytes), "utf-8")
@@ -80,7 +84,8 @@ def get_token(code):
         "redirect_uri": redirect_uri
     }
 
-    result = post(url, headers=headers, data=data)
+    async with httpx.AsyncClient() as client:
+                result = await client.post(url, headers=headers, data=data)
 
     if result.status_code != 200:
         print("Failed to retrieve token:", result.status_code, result.content)
@@ -94,28 +99,49 @@ def get_auth_headers(token):
 
 
 # CRUD OPERATIONS
-def search_for_artist(token, artist_name):
-    url:str = "https://api.spotify.com/v1/search"
-    headers = get_auth_headers(token)
-    query:str = f"q={artist_name}&type=artist&limit=1" 
+async def get_recent_songs(token, artist_id, artist_name, recent_songs):
+    albums = await get_artist_albums(token, artist_id)
+    two_weeks_ago = datetime.now() - timedelta(weeks=4)
 
-    query_url:str = url + "?" + query
-    result = get(query_url, headers=headers)
+    for album in albums:
+        released_date = album.get('release_date')
 
-    if result.status_code != 200:
-        return None
-    
-    json_result = json.loads(result.content)["artists"]["items"]
-    if len(json_result) == 0:
-        print("No artist with this name exists...")
-        return None
-    
-    return json_result[0]
+        if len(released_date) == 4:
+            released_date = f"{released_date}-01-01"
+        else:
+            try:
+                datetime.strptime(released_date, "%Y-%m-%d")
+            except ValueError:
+                print(f"Invalid data format for album: {album['name']}, date: {released_date}")
+                continue
 
-def get_artist_albums(token, artist_id):
+        released_date = datetime.strptime(released_date, "%Y-%m-%d")
+
+        if released_date > two_weeks_ago:
+            url = f"https://api.spotify.com/v1/albums/{album['id']}/tracks"
+            headers = get_auth_headers(token)
+
+            async with httpx.AsyncClient() as client:
+                result = await client.get(url, headers=headers)
+
+            if result.status_code == 200:
+                tracks = json.loads(result.content)["items"]
+                recent_songs[artist_name] = [
+                    {
+                        'name': track['name'],
+                        'external_url': track['external_urls']['spotify'],
+                        'release_date': album['release_date'],
+                        'album_name': album['name']
+                    }
+                    for track in tracks
+                ]
+
+async def get_artist_albums(token, artist_id):
     url:str = f"https://api.spotify.com/v1/artists/{artist_id}/albums"
     headers = get_auth_headers(token)
-    result = get(url, headers=headers)
+
+    async with httpx.AsyncClient() as client:
+        result = await client.get(url, headers=headers)
 
     if result.status_code != 200:
         return []
@@ -123,52 +149,15 @@ def get_artist_albums(token, artist_id):
     json_result = json.loads(result.content)
     return json_result["items"]
 
-def get_recent_songs_by_artist(token, artist_id):
-    albums = get_artist_albums(token, artist_id)
-    recent_songs = []
-    two_weeks_ago = datetime.now() - timedelta(weeks=2)
-
-    for album in albums:
-        released_date = datetime.strptime(album['release_date'], "%Y-%m-%d")
-
-        if released_date > two_weeks_ago:
-            url = f"https://api.spotify.com/v1/albums/{album['id']}/tracks"
-            headers = get_auth_headers(token)
-            result = get(url, headers=headers)
-
-            if result.status_code == 200:
-                tracks = json.loads(result.content)["items"]
-                for track in tracks:
-                    recent_songs.append({
-                        'name': track['name'],
-                        'external_url': track['external_urls']['spotify'],
-                        'release_date': album['release_date'],
-                        'album_name': album['name']
-                    })
-
-    return recent_songs
-
-# def get_songs_by_artist(token, artist_id):
-#     url:str = f"https://api.spotify.com/v1/artists/{artist_id}/top-tracks?country=US"
-#     headers = get_auth_headers(token)
-#     result = get(url, headers=headers)
-
-#     # Check if the song retrieval request was successful
-#     if result.status_code != 200:
-#         print("Error retrieving songs:", result.content)
-#         return []
-    
-#     json_result = json.loads(result.content)["tracks"]
-#     return json_result
-
-def get_followed_artists(token):
+async def get_followed_artists(token):
     url:str = "https://api.spotify.com/v1/me/following?type=artist&limit=50"
     headers = get_auth_headers(token)
-    result = get(url, headers=headers)
+
+    async with httpx.AsyncClient() as client:
+        result = await client.get(url, headers=headers)
 
     if result.status_code != 200:
         return []
     
     json_result = json.loads(result.content)
-    # print("Followed artists response:", json_result)
     return json_result["artists"]["items"]
