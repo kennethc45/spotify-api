@@ -24,13 +24,12 @@ API to display the latest songs of artists that users' follow.
         - `REDIRECT_URI`: Spotify API redirect URI
 
 2. Run this command to build and run the docker container: 
-    - docker build -t spotify-api -f docker/Dockerfile . 
-    - docker run --name spotify-api-container -p 8888:8888 spotify-api
+    - `docker-compose up --build`
 
 3. Login w/ your spotify account and grant authorization to the API
 
 # Testing
- - Run 'upytest test_main.py' to start tests locally
+ - Run `upytest test_main.py` to start tests locally
  - There is a CI workflow established for test automation
 
 # Endpoints 

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .                      # Where the docker-compose.yml is lcoated
+      dockerfile: docker/Dockerfile   # Path to Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+      - REDIRECT_URI=${REDIRECT_URI}
+    env_file:
+      - .env
+    volumes:
+      - .:/spotify-api                # Mounts local directory into container for hot reloading.
