@@ -1,15 +1,15 @@
 # Spotify-Api
 API to display the latest songs of artists that users' follow.
 
-# Prerequisites
-- Install Docker
-- Python 3.12.3
-
 # Environment Variables 
 **The environmenet variables are securely stored online as GitHub secrets. Only trusted collaborators will be able to access these variables for local development.**
 
 # Deployment
 **Development is ongoing. Project will be deployed later on.**
+
+# Prerequisites
+- Install Docker
+- Python 3.12.3
 
 # Local Setup for Collaborators
 1. Clone repository and navigate to it:
