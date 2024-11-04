@@ -27,24 +27,50 @@ jobs:
           # pip install -r ../requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
-      - name: Build Docker container
+      - name: Build and Start Services
         run: |
-          docker build -t spotify-api -f docker/Dockerfile .
-
-      - name: Run Docker container
-        run: |
-          docker run --name spotify-api-container -d -p 8888:8888 --env-file ${{ github.workspace }}/.env spotify-api
+          docker-compose -f ${{ github.workspace }}/docker-compose.yml up -d --build \
+            --env CLIENT_ID=${{ secrets.CLIENT_ID }} \
+            --env CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+            --env REDIRECT_URI=${{ secrets.REDIRECT_URI }} \
 
       - name: Run tests
-        run: docker exec spotify-api-container python -m unittest discover -s .. -p "test_*.py"
+        run: |
+          # docker-compose -f ${{ github.workspace }}/docker-compose.yml exec app python -m unittest discover -s .. "test_*.py"
+          docker-compose -f ${{ github.workspace }}/docker-compose.yml exec app python -m unittest discover -s . -p "test_*.py"
 
-      - name: Stop and remove Docker container
+      - name: Stop and remove services
         if: always()
         run: |
-          docker stop spotify-api-container || true
-          docker rm spotify-api-container || true
+          docker-compose -f ${{ github.workspace }}/docker-compose.yml down
 
       - name: Prune Docker system
         if: always()
         run: |
           docker system prune -f
+
+      # - name: Build Docker container
+      #   run: |
+      #     docker build -t spotify-api -f docker/Dockerfile .
+
+      # - name: Run Docker container
+      #   run: |
+      #     docker run --name spotify-api-container -d -p 8888:8888 \
+      #       -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
+      #       -e CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
+      #       -e REDIRECT_URI=${{ secrets.REDIRECT_URI }} \
+      #       spotify-api
+
+      # - name: Run tests
+      #   run: docker exec spotify-api-container python -m unittest discover -s .. -p "test_*.py"
+
+      # - name: Stop and remove Docker container
+      #   if: always()
+      #   run: |
+      #     docker stop spotify-api-container || true
+      #     docker rm spotify-api-container || true
+
+      # - name: Prune Docker system
+      #   if: always()
+      #   run: |
+      #     docker system prune -f
