@@ -33,7 +33,6 @@ jobs:
 
       - name: Run Docker container
         run: |
-          # docker run --name spotify-api-container -d -p 8888:8888 --env-file ../.env spotify-api
           docker run --name spotify-api-container -d -p 8888:8888 --env-file ${{ github.workspace }}/.env spotify-api
 
       - name: Run tests
