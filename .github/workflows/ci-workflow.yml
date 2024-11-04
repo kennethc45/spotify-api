@@ -27,6 +27,15 @@ jobs:
           # pip install -r ../requirements.txt
           pip install -r ${{ github.workspace }}/requirements.txt
 
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get install -y docker-compose
+
       - name: Build and Start Services
         run: |
           docker-compose -f ${{ github.workspace }}/docker-compose.yml up -d --build \
@@ -48,29 +57,3 @@ jobs:
         if: always()
         run: |
           docker system prune -f
-
-      # - name: Build Docker container
-      #   run: |
-      #     docker build -t spotify-api -f docker/Dockerfile .
-
-      # - name: Run Docker container
-      #   run: |
-      #     docker run --name spotify-api-container -d -p 8888:8888 \
-      #       -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
-      #       -e CLIENT_SECRET=${{ secrets.CLIENT_SECRET }} \
-      #       -e REDIRECT_URI=${{ secrets.REDIRECT_URI }} \
-      #       spotify-api
-
-      # - name: Run tests
-      #   run: docker exec spotify-api-container python -m unittest discover -s .. -p "test_*.py"
-
-      # - name: Stop and remove Docker container
-      #   if: always()
-      #   run: |
-      #     docker stop spotify-api-container || true
-      #     docker rm spotify-api-container || true
-
-      # - name: Prune Docker system
-      #   if: always()
-      #   run: |
-      #     docker system prune -f
