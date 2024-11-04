@@ -30,6 +30,10 @@ app.add_middleware(
     allow_headers=["*"],    # Allows all headers in requests
 )
 
+# KEYPOINTS
+# 1. Tokens are needed to make requests to Sotify Web API
+# 2. Headers are used to authenticate requests (they include the token)
+
 # Login endpoint that initiates OAuth protocol in Spotify
 @app.get("/login")
 async def login():
@@ -37,13 +41,13 @@ async def login():
     scope:str = "user-follow-read user-library-read"
     # Construct the Spotify authorization URL w/ necessary parameters 
     auth_url:str = f"https://accounts.spotify.com/authorize?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&scope={scope}"
-    # Redirects user to redirect_uri after successful login
+    # Redirects user to Spotify login and initiates OAuth protocol
     return RedirectResponse(url=auth_url)
 
-# Callback endoint that redirects users to after user authentication
+# Callback endoint that showcases the recent releases of the users followed artists after login
 @app.get("/callback")
 async def callback(request: Request):
-    # Retrieve authorization code from query parameters
+    # Retrieve authorization code from query parameters of approved OAuth protocol
     code = request.query_params.get('code')
 
     # If no code is received, return an error message
@@ -104,7 +108,7 @@ async def get_token(code):
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    # Define the data for the POST request to obtain the token
+    # Define the data needed for the POST request to obtain the token
     data = {
         "grant_type": "authorization_code",
         "code": code,
@@ -133,9 +137,9 @@ def get_auth_headers(token):
 
 # Function to retrieve recent songs for a given artist
 async def get_recent_songs(token, artist_id, artist_name, recent_songs):
-    # Get the lsit of albums for the artist
+    # Get the list of albums for the artist
     albums = await get_artist_albums(token, artist_id)
-    # Calculate the date two weeks for filtering recent releases
+    # Calculate the date two weeks ago for filtering recent releases
     two_weeks_ago = datetime.now() - timedelta(weeks=4)
 
     # Loop through each album of the artist
@@ -143,7 +147,7 @@ async def get_recent_songs(token, artist_id, artist_name, recent_songs):
         # Get the release date for the album
         released_date = album.get('release_date')
 
-        # If the release date is in YYYY format, assume January 1 of that year
+        # If the release date is in YYYY format, assume January 1st of that year
         if len(released_date) == 4:
             released_date = f"{released_date}-01-01"
         else:
@@ -156,7 +160,7 @@ async def get_recent_songs(token, artist_id, artist_name, recent_songs):
                 # Skip to next album
                 continue
 
-        # Convert release dat string to a datetime object
+        # Convert release date string to a datetime object
         released_date = datetime.strptime(released_date, "%Y-%m-%d")
 
         # Check if the album was released within the last two weeks

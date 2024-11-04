@@ -29,7 +29,7 @@ API to display the latest songs of artists that users' follow.
 3. Login w/ your spotify account and grant authorization to the API
 
 # Testing
- - Run `upytest test_main.py` to start tests locally
+ - Run `pytest test_main.py` to start tests locally
  - There is a CI workflow established for test automation
 
 # Endpoints 
