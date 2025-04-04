@@ -24,7 +24,7 @@ API to display the latest songs of artists that users' follow.
         - `REDIRECT_URI`: Spotify API redirect URI
 
 2. Run this command to build and run the docker container: 
-    - `docker-compose up --build`
+    - `docker compose up --build`
 
 3. Login w/ your spotify account and grant authorization to the API
 
@@ -41,3 +41,8 @@ API to display the latest songs of artists that users' follow.
   - **Success**: Redirects to `http://localhost:8888/callback`
   - **Error**: Returns an error message if authentication fails.
 
+# Angular Set-Up
+- `main.ts` is the main entrypoint for Angular 
+- `app.component.ts` defines behavior, styling, and template
+- `app.component.html` contains the HTML structure
+- `spotify.service.ts` makes the HTTP request to fetch data from the backend API
