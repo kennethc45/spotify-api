@@ -1,7 +1,7 @@
 # Spotify-Api
 Ever wish Spotify showed new music from your favorite artists like Youtube/s Subscription page? This project brings that idea to life by integrating with the Spotify API to fetch and display the latest album and single releases from artists the user follows.
 
-![Screenshot of the project](assets/Screenshot 2025-04-18 at 4.17.14 PM.png)
+![Screenshot of the project](assets/README.png)
 
 # Deployment is still ongoing
 
