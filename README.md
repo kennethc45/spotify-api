@@ -8,7 +8,7 @@ Ever wish Spotify showed new music from your favorite artists like Youtube/s Sub
 <details>
   <summary><strong style="font-size: 32px;">Environment Variables </strong></summary>
 
-**The environmenet variables are securely stored online as GitHub secrets. Only trusted collaborators will be able to access these variables for local development.**
+The environmenet variables are securely stored online as GitHub secrets. Only trusted collaborators will be able to access these variables for local development.**
 
 </details>
 
