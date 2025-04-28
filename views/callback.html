@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent Releases</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .artist {
+            margin-bottom: 20px;
+        }
+        .song {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .song a {
+            color: #1DB954;
+            text-decoration: none;
+        }
+        .song a:hover {
+            text-decoration: underline;
+        }
+        .song-details {
+            margin-top: 5px;
+        }
+        .song-details p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recent Songs for Your Followed Artists</h1>
+
+    {% if recent_songs %}
+        {% for artist, songs in recent_songs.items() %}
+            <details class="artist">
+                <summary style="display: flex; align-items: center;">
+                    <strong>{{ artist }}</strong>
+                </summary>
+                {% for song in songs %}
+                    <div class="song">
+                        <p><strong>Name:</strong> {{ song['name'] }}</p>
+                        <p><strong>Link:</strong> <a href="{{ song['external_url'] }}" target="_blank">Listen on Spotify</a></p>
+                        <p><strong>Release Date:</strong> {{ song['release_date'] }}</p>
+                        <p><strong>Album:</strong> {{ song['album_name'] }}</p>
+                    </div>
+                {% endfor %}
+            </details>
+        {% endfor %}
+    {% else %}
+        <p>No recent releases found.</p>
+    {% endif %}
+</body>
+</html>
+

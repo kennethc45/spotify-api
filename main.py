@@ -5,8 +5,8 @@ import base64
 from requests import post, get
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 
-from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import time 
 import asyncio 
@@ -21,14 +21,7 @@ redirect_uri:str = os.getenv("REDIRECT_URI")
 # Creates API through FastAPI
 app = FastAPI()
 
-# Disable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],    # Allows requests from any origin
-    allow_credentials=True, # Allows credentials to be included in requests
-    allow_methods=["*"],    # Allows all HTTP methods
-    allow_headers=["*"],    # Allows all headers in requests
-)
+template = Jinja2Templates(directory="views")
 
 # KEYPOINTS
 # 1. Tokens are needed to make requests to Sotify Web API
@@ -44,9 +37,8 @@ async def login():
     # Redirects user to Spotify login and initiates OAuth protocol
     return RedirectResponse(url=auth_url)
 
-# Callback endoint that showcases the recent releases of the users followed artists after login
 @app.get("/callback")
-async def callback(request: Request):
+async def callback(request: Request) -> None:
     # Retrieve authorization code from query parameters of approved OAuth protocol
     code = request.query_params.get('code')
 
@@ -57,39 +49,63 @@ async def callback(request: Request):
     # Exchange authorization code for an access token
     token = await get_token(code)
 
-    if token:
-        # Get the list of artists that the user follows
-        followed_artists = await get_followed_artists(token)
-        # Initialize a dictionary to hold recent songs
-        recent_songs = {}
+    if not token:
+        return {"Error": "Token Exchange failed"}
+    
+    redirect_url: str = f"/releases?token={token}"
 
-        # If followed artists are found, then fetch their recent releases
-        if followed_artists:
-            start_time = time.time()    # Marks starting time for query
-            tasks = []                  # List to hold aysnchronous tasks
+    return RedirectResponse(url=redirect_url)
 
-            # Loop through each followed artist
-            for artist in followed_artists:
-                artist_name = artist["name"]
-                artist_id = artist["id"]
+async def releases(token):
+    if not token:
+        return {"Error": "Not Authenticated"}
+
+    # Get the list of artists that the user follows
+    followed_artists = await get_followed_artists(token)
+    recent_songs = {}
+
+    # If followed artists are found, then fetch their recent releases
+    if followed_artists:
+        start_time = time.time()    # Marks starting time for query
+        tasks = []                  # List to hold aysnchronous tasks
+
+        # Loop through each followed artist
+        for artist in followed_artists:
+            artist_name = artist["name"]
+            artist_id = artist["id"]
                 
-                # Create a task to fetch recent songs for artist
-                tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
+            # Create a task to fetch recent songs for artist
+            tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
 
-            # Runs all tasks concurrently
-            await asyncio.gather(*tasks)    
+        # Runs all tasks concurrently
+        await asyncio.gather(*tasks)    
 
-            # Measures query time to retrieve recent releases
-            total_duration = time.time() - start_time
-            print(f"Time to retrieve recent releases: {total_duration * 1000:.2f} ms")
-        else:
-            print("Cannot find followed artists!")
-
-        # Return recent songs for followed artists
-        return recent_songs
+        # Measures query time to retrieve recent releases
+        total_duration = time.time() - start_time
+        print(f"Time to retrieve recent releases: {total_duration * 1000:.2f} ms")
     else:
-        print("Error: Token retrieval failed.")
-        return RedirectResponse(url="/login")
+        print("Cannot find followed artists!")
+
+     # Return recent songs for followed artists
+    return recent_songs
+
+@app.get('/releases')
+async def index(req: Request, token: str):
+    recent_songs = await releases(token)
+
+    return template.TemplateResponse (
+        name="callback.html",
+        context={"request": req, "recent_songs": recent_songs}
+    )
+
+
+
+
+
+
+
+
+
 
 # Function to returns access token in exchange for an authorization code
 async def get_token(code):
