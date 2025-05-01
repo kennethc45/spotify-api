@@ -2,10 +2,7 @@ from requests import post, get
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from spotify_api import get_token, get_followed_artists, get_recent_songs, client_id, redirect_uri
-
-import time 
-import asyncio 
+from spotify_api import get_token, get_followed_artists, get_recent_songs, client_id, redirect_uri, releases
 
 
 # Creates API through FastAPI
@@ -45,39 +42,6 @@ async def callback(request: Request) -> None:
     redirect_url: str = f"/releases?token={token}"
 
     return RedirectResponse(url=redirect_url)
-
-async def releases(token):
-    if not token:
-        return {"Error": "Not Authenticated"}
-
-    # Get the list of artists that the user follows
-    followed_artists = await get_followed_artists(token)
-    recent_songs = {}
-
-    # If followed artists are found, then fetch their recent releases
-    if followed_artists:
-        start_time = time.time()    # Marks starting time for query
-        tasks = []                  # List to hold aysnchronous tasks
-
-        # Loop through each followed artist
-        for artist in followed_artists:
-            artist_name = artist["name"]
-            artist_id = artist["id"]
-                
-            # Create a task to fetch recent songs for artist
-            tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
-
-        # Runs all tasks concurrently
-        await asyncio.gather(*tasks)    
-
-        # Measures query time to retrieve recent releases
-        total_duration = time.time() - start_time
-        print(f"Time to retrieve recent releases: {total_duration * 1000:.2f} ms")
-    else:
-        print("Cannot find followed artists!")
-
-     # Return recent songs for followed artists
-    return recent_songs
 
 @app.get('/releases')
 async def index(req: Request, token: str):

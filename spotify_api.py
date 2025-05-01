@@ -1,13 +1,49 @@
+from datetime import datetime, timedelta
+
 import json
 import base64
 import os
-from datetime import datetime, timedelta
 import httpx
+import time 
+import asyncio 
 
 # # Loads in environment variables to connect to the Spotify Web API
 client_id:str = os.getenv("CLIENT_ID")
 client_secret:str = os.getenv("CLIENT_SECRET")
 redirect_uri:str = os.getenv("REDIRECT_URI")
+
+async def releases(token):
+    if not token:
+        return {"Error": "Not Authenticated"}
+
+    # Get the list of artists that the user follows
+    followed_artists = await get_followed_artists(token)
+    recent_songs = {}
+
+    # If followed artists are found, then fetch their recent releases
+    if followed_artists:
+        start_time = time.time()    # Marks starting time for query
+        tasks = []                  # List to hold aysnchronous tasks
+
+        # Loop through each followed artist
+        for artist in followed_artists:
+            artist_name = artist["name"]
+            artist_id = artist["id"]
+                
+            # Create a task to fetch recent songs for artist
+            tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
+
+        # Runs all tasks concurrently
+        await asyncio.gather(*tasks)    
+
+        # Measures query time to retrieve recent releases
+        total_duration = time.time() - start_time
+        print(f"Time to retrieve recent releases: {total_duration * 1000:.2f} ms")
+    else:
+        print("Cannot find followed artists!")
+
+     # Return recent songs for followed artists
+    return recent_songs
 
 # Function to returns access token in exchange for an authorization code
 async def get_token(code):
@@ -50,6 +86,9 @@ async def get_token(code):
 def get_auth_headers(token):
     return {"Authorization": "Bearer " + token}
 
+# async def get_artist(token, artist_id):
+#     url: str = f"https://api.spotify.com/v1/artists{artist_id}"
+
 # Function to retrieve the users followed artists
 async def get_followed_artists(token):
     # Define the URL to get followed artists
@@ -65,7 +104,7 @@ async def get_followed_artists(token):
     if result.status_code != 200:
         return []
     
-    # Load and return the lsit of followed artists from the JSON response
+    # Load and return the list of followed artists from the JSON response
     json_result = json.loads(result.content)
     return json_result["artists"]["items"]
 
