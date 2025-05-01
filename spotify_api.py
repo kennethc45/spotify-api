@@ -86,9 +86,6 @@ async def get_token(code):
 def get_auth_headers(token):
     return {"Authorization": "Bearer " + token}
 
-# async def get_artist(token, artist_id):
-#     url: str = f"https://api.spotify.com/v1/artists{artist_id}"
-
 # Function to retrieve the users followed artists
 async def get_followed_artists(token):
     # Define the URL to get followed artists
