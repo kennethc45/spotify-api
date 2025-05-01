@@ -40,12 +40,13 @@
     <h1>Recent Songs From Your Followed Artists</h1>
 
     {% if recent_songs %}
-        {% for artist, songs in recent_songs.items() %}
+        {% for artist, songs_items in recent_songs.items() %}
             <details class="artist">
                 <summary style="display: flex; align-items: center;">
+                    <img src="{{ songs_items.artist_photo}}" alt="{{ artist }}" style="width: 50px; height: 50px; margin-right: 10px; border-radius: 50%;">
                     <strong>{{ artist }}</strong>
                 </summary>
-                {% for song in songs %}
+                {% for song in songs_items.songs %}
                     <div class="song">
                         <p><strong>Name:</strong> {{ song['name'] }}</p>
                         <p><strong>Link:</strong> <a href="{{ song['external_url'] }}" target="_blank">Listen on Spotify</a></p>

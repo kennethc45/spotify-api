@@ -29,9 +29,10 @@ async def releases(token):
         for artist in followed_artists:
             artist_name = artist["name"]
             artist_id = artist["id"]
+            artist_photo = artist["images"][0]["url"]
                 
             # Create a task to fetch recent songs for artist
-            tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs))
+            tasks.append(get_recent_songs(token, artist_id, artist_name, recent_songs, artist_photo))
 
         # Runs all tasks concurrently
         await asyncio.gather(*tasks)    
@@ -42,7 +43,7 @@ async def releases(token):
     else:
         print("Cannot find followed artists!")
 
-     # Return recent songs for followed artists
+    # Return recent songs for followed artists
     return recent_songs
 
 # Function to returns access token in exchange for an authorization code
@@ -124,11 +125,12 @@ async def get_artist_albums(token, artist_id):
     return json_result["items"]
 
 # Function to retrieve recent songs for a given artist
-async def get_recent_songs(token, artist_id, artist_name, recent_songs):
+async def get_recent_songs(token, artist_id, artist_name, recent_songs, artist_photo):
     # Get the list of albums for the artist
     albums = await get_artist_albums(token, artist_id)
     # Calculate the date two weeks ago for filtering recent releases
     two_weeks_ago = datetime.now() - timedelta(weeks=4)
+    artist_tracks = []
 
     # Loop through each album of the artist
     for album in albums:
@@ -167,7 +169,7 @@ async def get_recent_songs(token, artist_id, artist_name, recent_songs):
                 # Load the tracks from the JSON response
                 tracks = json.loads(result.content)["items"]
                 # Populate the recent_songs dictionary from callback endpoint with track information
-                recent_songs[artist_name] = [
+                artist_tracks.extend([
                     {
                         'name': track['name'],
                         'external_url': track['external_urls']['spotify'],
@@ -175,4 +177,10 @@ async def get_recent_songs(token, artist_id, artist_name, recent_songs):
                         'album_name': album['name']
                     }
                     for track in tracks
-                ]
+                ])
+
+    if artist_tracks:
+        recent_songs[artist_name] = {
+            "artist_photo": artist_photo,
+            "songs": artist_tracks
+        }
