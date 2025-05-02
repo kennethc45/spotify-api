@@ -51,7 +51,10 @@ Ever wish Spotify showed new music from your favorite artists like Youtube/s Sub
 <details>
   <summary><strong style="font-size: 32px;">Testing</strong></summary>
 
- - Run `pytest test_main.py` to start tests locally
+ - Run this command to start tests locally
+    ```sh
+    pytest test_main.py
+    ```
  - There is a CI workflow established for test automation
 
 </details>
