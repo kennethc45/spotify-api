@@ -6,45 +6,55 @@ Ever wish Spotify showed new music from your favorite artists like Youtube/s Sub
 # Deployment is still ongoing
 
 <details>
-  <summary><strong style="font-size: 32px;">Environment Variables </strong></summary>
+  <summary><strong style="font-size: 32px;">Technologies</strong></summary>
 
-The environmenet variables are securely stored online as GitHub secrets. Only trusted collaborators will be able to access these variables for local development.**
-
-</details>
-
-<details>
-  <summary><strong style="font-size: 32px;">Prerequisites</strong></summary>
-
-- Install Docker
-- Python 3.12.3
+ - Python 3.9
+ - JavaScript
+ - HTML
+ - Docker 
+ - FastAPI
+ - GitHub Actions 
 
 </details>
 
 <details>
-  <summary><strong style="font-size: 32px;">Local Setup for Collaborators</strong></summary>
+  <summary><strong style="font-size: 32px;">To-Dos / Future Features</strong></summary>
 
-1. Clone repository and navigate to it:
-    - git clone https://github.com/"GIT_USERNAME"/spotify-api.git
+ - Implement filter buttons to sort songs by artist and release date
+ - Implement log out endpoint
+ - Modify UI to display album cover for songs
 
-    - cd spotify-api
+</details>
 
-2. Create an `.env` file in the root directory of the project.
-    - Add the following lines to the `.env` file w/ the actual values:
-        - `CLIENT_ID`: Spotify API client ID.
-        - `CLIENT_SECRET`: Spotify API client secret.
-        - `REDIRECT_URI`: Spotify API redirect URI
+<details>
+  <summary><strong style="font-size: 32px;">How to Build / Run</strong></summary>
 
-2. Run this command to build and run the docker container: 
-    - `docker  compose up --build`
+1. Turn on Docker Desktop 
+2. Clone repository and navigate to it:
+    ```sh
+    git clone https://github.com/"GIT_USERNAME"/spotify-api.git
+    ```
 
-3. Login w/ your spotify account and grant authorization to the API
+3. Create an `.env` file based on the `.env.example` file.
 
+4. Build and run the docker container
+    ```sh
+    docker  compose up --build
+    ```
+
+5. Follow the link to login w/ your spotify account and grant authorization to the API
+    ```sh
+    http://localhost:8888/login
+    ```
 </details>
 
 <details>
   <summary><strong style="font-size: 32px;">Testing</strong></summary>
 
- - Run `pytest test_main.py` to start tests locally
+ - Run this command to start tests locally
+    ```sh
+    pytest test_main.py
+    ```
  - There is a CI workflow established for test automation
 
 </details>
